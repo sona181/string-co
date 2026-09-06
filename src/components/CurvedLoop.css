@@ -1,0 +1,8 @@
+.curved-loop {
+  display: block;
+}
+
+/* Override any hero-sized defaults from other usages */
+.curved-loop__text {
+  font-weight: 700;
+}

@@ -1,0 +1,393 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth (NextAuth / Auth.js v5 required models) ────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  // custom fields
+  passwordHash  String?
+  fullName      String?
+  role          Role      @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+
+  accounts      Account[]
+  sessions      Session[]
+
+  addresses              Address[]
+  cart                   Cart?
+  orders                 Order[]
+  reviews                Review[]
+  loyaltyAccount         LoyaltyAccount?
+  loyaltyTransactions    LoyaltyTransaction[]
+  savedProducts          SavedProduct[]
+  savedVariants          SavedVariant[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum Genre {
+  HIP_HOP
+  CLASSICAL
+  JAZZ
+  ROCK_METAL
+  ELECTRONIC
+  COUNTRY_FOLK
+  REGGAE
+  BLUES_SOUL
+}
+
+// ─── Addresses ────────────────────────────────────────────────────────────────
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  isDefault  Boolean @default(false)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+// ─── Catalog ──────────────────────────────────────────────────────────────────
+
+model Brand {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+
+  @@map("brands")
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  parentId  String?
+  parent    Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children  Category[] @relation("SubCategories")
+  products  Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @db.Text
+  basePrice   Decimal  @db.Decimal(10, 2)
+  sku         String   @unique
+  imageUrl    String?  // fallback image for products with no variants (accessories, strings, picks, etc.)
+  imageWidth  Int?     // natural pixel width — stored at upload time via Cloudinary response
+  imageHeight Int?     // natural pixel height — stored at upload time via Cloudinary response
+  model3dUrl  String?  // reserved for future 3D configurator — .glb/.gltf reference, not used yet
+  audioUrl    String?  // optional sound sample — uploaded to Cloudinary as resource_type:'video'
+  genre       Genre?   // which genre-pill filter this product appears under (nullable = unclassified)
+  createdAt   DateTime @default(now())
+
+  categoryId String
+  brandId    String
+  category   Category @relation(fields: [categoryId], references: [id])
+  brand      Brand    @relation(fields: [brandId], references: [id])
+
+  customizationOptions ProductCustomizationOption[]
+  variants             ProductVariant[]
+  reviews              Review[]
+  savedBy              SavedProduct[]
+
+  @@map("products")
+}
+
+// ─── Customization ────────────────────────────────────────────────────────────
+
+model CustomizationOption {
+  id          String     @id @default(cuid())
+  optionType  OptionType
+  name        String
+  hexOrValue  String?
+
+  productOptions    ProductCustomizationOption[]
+  variantsBodyColor ProductVariant[] @relation("BodyColor")
+  variantsPickguard ProductVariant[] @relation("Pickguard")
+  variantsHardware  ProductVariant[] @relation("Hardware")
+
+  @@map("customization_options")
+}
+
+enum OptionType {
+  BODY_COLOR
+  PICKGUARD
+  HARDWARE
+}
+
+model ProductCustomizationOption {
+  id        String @id @default(cuid())
+  productId String
+  optionId  String
+
+  product Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  option  CustomizationOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, optionId])
+  @@map("product_customization_options")
+}
+
+model ProductVariant {
+  id                  String  @id @default(cuid())
+  productId           String
+  bodyColorOptionId   String
+  pickguardOptionId   String
+  hardwareOptionId    String
+  comboKey            String  // e.g. 'cherryred_black_chrome' — denormalized for fast image lookup
+  imageUrl            String
+  priceDelta          Decimal @default(0) @db.Decimal(10, 2)
+  sku                 String  @unique
+
+  product       Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  bodyColor     CustomizationOption @relation("BodyColor", fields: [bodyColorOptionId], references: [id])
+  pickguard     CustomizationOption @relation("Pickguard", fields: [pickguardOptionId], references: [id])
+  hardware      CustomizationOption @relation("Hardware", fields: [hardwareOptionId], references: [id])
+
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  savedVariants SavedVariant[]
+
+  @@unique([productId, comboKey])
+  @@map("product_variants")
+}
+
+// ─── Cart ─────────────────────────────────────────────────────────────────────
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  variantId String
+  quantity  Int    @default(1)
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@unique([cartId, variantId])
+  @@map("cart_items")
+}
+
+// ─── Orders ───────────────────────────────────────────────────────────────────
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  addressId       String?
+  status          OrderStatus @default(PENDING)
+  total           Decimal     @db.Decimal(10, 2)
+  stripePaymentId String?
+  paypalOrderId   String?
+  createdAt       DateTime    @default(now())
+
+  user    User       @relation(fields: [userId], references: [id])
+  address Address?   @relation(fields: [addressId], references: [id])
+  items   OrderItem[]
+  reviews Review[]
+
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  variantId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2) // snapshotted at purchase time
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// ─── Reviews ─────────────────────────────────────────────────────────────────
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  orderId   String?  // nullable — links to a verified purchase
+  rating    Int
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  @@map("reviews")
+}
+
+// ─── Loyalty ─────────────────────────────────────────────────────────────────
+
+model LoyaltyAccount {
+  userId        String       @id
+  pointsBalance Int          @default(0)
+  tier          LoyaltyTier  @default(BRONZE)
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty_accounts")
+}
+
+model LoyaltyRule {
+  id              String      @id @default(cuid())
+  tier            LoyaltyTier
+  minSpend        Decimal     @db.Decimal(10, 2)
+  pointsPerDollar Int
+
+  @@map("loyalty_rules")
+}
+
+model LoyaltyTransaction {
+  id          String            @id @default(cuid())
+  userId      String
+  orderId     String?
+  pointsDelta Int               // positive = earn, negative = redeem
+  reason      TransactionReason
+  createdAt   DateTime          @default(now())
+
+  user  User   @relation(fields: [userId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@map("loyalty_transactions")
+}
+
+model LoyaltyReward {
+  id          String  @id @default(cuid())
+  name        String
+  pointsCost  Int
+  description String  @db.Text
+  active      Boolean @default(true)
+
+  @@map("loyalty_rewards")
+}
+
+enum LoyaltyTier {
+  BRONZE
+  SILVER
+  GOLD
+}
+
+enum TransactionReason {
+  PURCHASE
+  REDEMPTION
+  ADMIN_ADJUSTMENT
+  BIRTHDAY_BONUS
+}
+
+// ─── Wishlist & Saved Builds ──────────────────────────────────────────────────
+
+model SavedProduct {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("saved_products")
+}
+
+model SavedVariant {
+  id        String   @id @default(cuid())
+  userId    String
+  variantId String
+  label     String?
+  createdAt DateTime @default(now())
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, variantId])
+  @@map("saved_variants")
+}
+

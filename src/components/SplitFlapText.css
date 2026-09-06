@@ -1,0 +1,23 @@
+.split-flap-tile {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  font-family:     'SFMono-Regular', 'Roboto Mono', 'Courier New', monospace;
+  font-weight:     700;
+  line-height:     1;
+  user-select:     none;
+  transform-origin: center center;
+  /* subtle notch line at midpoint for split-flap authenticity */
+  box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.25);
+}
+
+.split-flap-tile--flip {
+  animation: split-flap var(--flip-duration, 0.16s) linear forwards;
+}
+
+@keyframes split-flap {
+  0%   { transform: perspective(280px) rotateX(0deg);   }
+  45%  { transform: perspective(280px) rotateX(-90deg); }
+  55%  { transform: perspective(280px) rotateX(90deg);  }
+  100% { transform: perspective(280px) rotateX(0deg);   }
+}

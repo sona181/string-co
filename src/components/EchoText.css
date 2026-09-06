@@ -1,0 +1,7 @@
+.echo-text {
+  display: inline-block;
+  position: relative;
+  user-select: none;
+  overflow: visible;
+  line-height: 1.2;
+}

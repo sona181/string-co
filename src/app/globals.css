@@ -10,6 +10,20 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Brand palette */
+  --color-asphalt:    #0D0D0D;
+  --color-concrete:   #F2EFE4;
+  --color-spray-red:  #FF3B1F;
+  --color-tag-yellow: #F7D726;
+  --color-chrome-teal:#00C2A8;
+  --color-rust-gray:  #8A8578;
+  /* Decorative rotating fonts — edit RotatingTitle.tsx FONTS array to toggle */
+  --font-lunatic:      var(--font-lunatic-var);
+  --font-riemish:      var(--font-riemish-var);
+  --font-first-lyrics: var(--font-first-lyrics-var);
+  --font-second-lyrics:var(--font-second-lyrics-var);
+  --font-wild-sewerage:var(--font-wild-sewerage-var);
+  --font-zombiewolf:   var(--font-zombiewolf-var);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +37,57 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Ferrofluid background */
+.ferrofluid-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Kill browser autofill background so mesh shows through */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  -webkit-text-fill-color: #F7D726 !important;
+  caret-color: #F7D726;
+  transition: background-color 9999s ease-in-out 0s;
+  background-color: transparent !important;
+}
+
+/* ScrollReveal component */
+.scroll-reveal { display: block; }
+.scroll-reveal-text { margin: 0; padding: 0; }
+.word { display: inline-block; }
+
+/* ScrambledText component */
+.scramble-block p {
+  margin: 0;
+  padding: 0;
+}
+.scramble-char {
+  display: inline;
+  will-change: contents;
+}
+
+/* WarpText WebGL component */
+.warp-text {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: inherit;
+}
+.warp-text canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }

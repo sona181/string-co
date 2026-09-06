@@ -1,0 +1,13 @@
+.text-pressure {
+  overflow: hidden;
+}
+
+.text-pressure__char {
+  transition: opacity 60ms linear;
+}
+
+/* Neon stroke: paint stroke behind fill so fill color stays clean on top */
+.text-pressure__char--stroke {
+  -webkit-text-stroke: 1.5px var(--stroke-color, #FF2ED1);
+  paint-order: stroke fill;
+}
