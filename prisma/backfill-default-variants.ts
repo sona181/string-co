@@ -61,7 +61,7 @@ async function main() {
         pickguardOptionId: STD_PG_ID,
         hardwareOptionId:  STD_HW_ID,
         comboKey:   "standard",
-        imageUrl:   p.imageUrl ?? null,
+        imageUrl:   p.imageUrl ?? "",
         priceDelta: 0,
         sku:        `${p.sku}-DEFAULT`,
       },

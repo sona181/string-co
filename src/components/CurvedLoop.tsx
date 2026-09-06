@@ -38,7 +38,7 @@ export default function CurvedLoop({
   const textPathRef = useRef<SVGTextPathElement>(null);
   const offsetRef   = useRef(0);
   const singleRef   = useRef(200); // px length of one marqueeText unit
-  const rafRef      = useRef<number>();
+  const rafRef      = useRef<number | undefined>(undefined);
   const dragging    = useRef(false);
   const lastX       = useRef(0);
 

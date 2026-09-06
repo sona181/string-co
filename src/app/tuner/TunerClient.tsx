@@ -184,7 +184,7 @@ export default function TunerClient() {
       const ctx      = audioCtxRef.current;
       if (!analyser || !buf || !ctx) return;
 
-      analyser.getFloatTimeDomainData(buf);
+      analyser.getFloatTimeDomainData(buf as Float32Array<ArrayBuffer>);
       const freq = detectPitch(buf, ctx.sampleRate);
       const instrument = currentInstrumentRef.current;
 
