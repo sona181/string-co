@@ -39,9 +39,10 @@ yarn-error.log*
 # vercel
 .vercel
 
-# claude code internals
+# IDE / AI tool internals
 .agents/
 .claude/
+.windsurf/
 skills-lock.json
 
 # typescript
