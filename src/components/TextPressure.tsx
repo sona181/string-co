@@ -39,7 +39,7 @@ export default function TextPressure({
   const containerRef = useRef<HTMLDivElement>(null);
   const charRefs     = useRef<(HTMLSpanElement | null)[]>([]);
   const mouseRef     = useRef({ x: -9999, y: -9999 });
-  const rafRef       = useRef<number>();
+  const rafRef       = useRef<number | undefined>(undefined);
   const chars        = text.split("");
 
   // Inject Google Font once per page session

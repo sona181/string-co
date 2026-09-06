@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 // Module-level cache so each unique URL is only rendered once per session
 const cache = new Map<string, string>();
@@ -36,7 +36,7 @@ function renderThumbnail(url: string): Promise<string> {
     const loader = new GLTFLoader();
     loader.load(
       url,
-      (gltf) => {
+      (gltf: GLTF) => {
         const model = gltf.scene;
 
         // Exclude floor/ground-plane meshes (extremely flat: smallest dim < 4% of largest)

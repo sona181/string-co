@@ -57,8 +57,8 @@ export default function AccountSidebar({ user }: Props) {
 
       {/* Nav */}
       <nav style={{ ...cardBase, overflow: "hidden" }}>
-        {NAV.map(({ href, label, icon: Icon, exact }) => {
-          const active = exact ? pathname === href : pathname.startsWith(href);
+        {NAV.map(({ href, label, icon: Icon }) => {
+          const active = pathname.startsWith(href);
           return (
             <Link
               key={href}

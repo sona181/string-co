@@ -51,7 +51,9 @@ export default function ProductForm({ categories: initCategories, brands: initBr
   const [sku, setSku]               = useState(product?.sku ?? "");
   const [brandId, setBrandId]       = useState(product?.brandId ?? "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
-  const [imageUrl, setImageUrl]       = useState(product?.imageUrl ?? "");
+  const [imageUrl, setImageUrl]         = useState(product?.imageUrl ?? "");
+  const [imageWidth, setImageWidth]     = useState<number | null>(null);
+  const [imageHeight, setImageHeight]   = useState<number | null>(null);
   const [audioUrl, setAudioUrl]       = useState(product?.audioUrl ?? "");
   const [model3dUrl, setModel3dUrl]   = useState(product?.model3dUrl ?? "");
   const [genre, setGenre]             = useState(product?.genre ?? "");
@@ -155,9 +157,14 @@ export default function ProductForm({ categories: initCategories, brands: initBr
     try {
       const fd = new FormData(); fd.append("file", file);
       const res  = await fetch("/api/admin/upload-image", { method: "POST", body: fd });
-      const data = await res.json() as { url?: string; error?: string };
-      if (data.url) onUrl(data.url);
-      else setGlobalError("Image upload failed: " + (data.error ?? "unknown"));
+      const data = await res.json() as { url?: string; width?: number; height?: number; error?: string };
+      if (data.url) {
+        onUrl(data.url);
+        if (data.width)  setImageWidth(data.width);
+        if (data.height) setImageHeight(data.height);
+      } else {
+        setGlobalError("Image upload failed: " + (data.error ?? "unknown"));
+      }
     } finally { setUploading(false); }
   }
 
@@ -215,7 +222,8 @@ export default function ProductForm({ categories: initCategories, brands: initBr
       const result = await saveProduct({
         id: product?.id, name, description,
         basePrice: parseFloat(basePrice), sku, brandId, categoryId,
-        imageUrl: imageUrl || null, model3dUrl: model3dUrl || null, audioUrl: audioUrl || null,
+        imageUrl: imageUrl || null, imageWidth: imageWidth, imageHeight: imageHeight,
+        model3dUrl: model3dUrl || null, audioUrl: audioUrl || null,
         genre: genre || null,
         attachedOptionIds: attachedIds,
         variants: variants.map(v => ({
